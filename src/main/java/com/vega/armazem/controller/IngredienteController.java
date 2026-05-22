@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vega.armazem.dto.request.CriarIngredienteRequest;
 import com.vega.armazem.dto.request.MovimentarIngredienteRequest;
 import com.vega.armazem.dto.response.IngredienteResponse;
+import com.vega.armazem.dto.response.VolumePorTipoResponse;
 import com.vega.armazem.service.IngredienteService;
 
 import jakarta.validation.Valid;
@@ -42,6 +43,13 @@ public class IngredienteController {
     @GetMapping
     public ResponseEntity<List<IngredienteResponse>> listarTodos() {
         List<IngredienteResponse> response = ingredienteService.listarTodos();
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/volume")
+    public ResponseEntity<List<VolumePorTipoResponse>> calcularVolumePorTipo() {
+        List<VolumePorTipoResponse> response = ingredienteService.calcularVolumePorTipo();
 
         return ResponseEntity.ok(response);
     }

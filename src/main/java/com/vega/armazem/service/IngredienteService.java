@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.vega.armazem.dto.request.CriarIngredienteRequest;
 import com.vega.armazem.dto.request.MovimentarIngredienteRequest;
 import com.vega.armazem.dto.response.IngredienteResponse;
+import com.vega.armazem.dto.response.VolumePorTipoResponse;
 import com.vega.armazem.entity.Compartimento;
 import com.vega.armazem.entity.Ingrediente;
 import com.vega.armazem.enums.TipoIngrediente;
@@ -160,6 +161,11 @@ public class IngredienteService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ingrediente não encontrado com o ID: " + id
                 ));
+    }
+    
+    @Transactional(readOnly = true)
+    public List<VolumePorTipoResponse> calcularVolumePorTipo() {
+        return ingredienteRepository.calcularVolumePorTipo();
     }
 
     private void validarQuantidadeDisponivelParaSaida(
