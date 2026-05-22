@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: armazem-backend
+
+  profiles:
+    active: local-h2
+
+  jpa:
+    open-in-view: false
+
+server:
+  port: ${PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
