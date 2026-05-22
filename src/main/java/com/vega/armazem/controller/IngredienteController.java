@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.vega.armazem.dto.request.CriarIngredienteRequest;
+import com.vega.armazem.dto.request.MovimentarIngredienteRequest;
 import com.vega.armazem.dto.response.IngredienteResponse;
 import com.vega.armazem.service.IngredienteService;
 
@@ -48,6 +49,26 @@ public class IngredienteController {
     @GetMapping("/{id}")
     public ResponseEntity<IngredienteResponse> buscarPorId(@PathVariable Long id) {
         IngredienteResponse response = ingredienteService.buscarPorId(id);
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/{id}/entrada")
+    public ResponseEntity<IngredienteResponse> adicionarEntrada(
+            @PathVariable Long id,
+            @Valid @RequestBody MovimentarIngredienteRequest request
+    ) {
+        IngredienteResponse response = ingredienteService.adicionarEntrada(id, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/saida")
+    public ResponseEntity<IngredienteResponse> registrarSaida(
+            @PathVariable Long id,
+            @Valid @RequestBody MovimentarIngredienteRequest request
+    ) {
+        IngredienteResponse response = ingredienteService.registrarSaida(id, request);
 
         return ResponseEntity.ok(response);
     }

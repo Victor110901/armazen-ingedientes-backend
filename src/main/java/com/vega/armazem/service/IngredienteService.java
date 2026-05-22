@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.vega.armazem.dto.request.CriarIngredienteRequest;
+import com.vega.armazem.dto.request.MovimentarIngredienteRequest;
 import com.vega.armazem.dto.response.IngredienteResponse;
 import com.vega.armazem.entity.Compartimento;
 import com.vega.armazem.entity.Ingrediente;
@@ -78,10 +79,7 @@ public class IngredienteService {
 
     @Transactional(readOnly = true)
     public IngredienteResponse buscarPorId(Long id) {
-        Ingrediente ingrediente = ingredienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Ingrediente não encontrado com o ID: " + id
-                ));
+        Ingrediente ingrediente = buscarIngredienteEntidadePorId(id);
 
         return IngredienteResponse.fromEntity(ingrediente);
     }
@@ -91,6 +89,98 @@ public class IngredienteService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Compartimento não encontrado com o ID: " + compartimentoId
                 ));
+    }
+    
+    @Transactional
+    public IngredienteResponse adicionarEntrada(Long ingredienteId, MovimentarIngredienteRequest request) {
+        Ingrediente ingrediente = buscarIngredienteEntidadePorId(ingredienteId);
+        Compartimento compartimento = ingrediente.getCompartimento();
+
+        validarEntradaNoCompartimento(
+                compartimento,
+                ingrediente.getTipo(),
+                request.getQuantidade()
+        );
+
+        ingrediente.adicionarQuantidade(
+                request.getQuantidade(),
+                request.getResponsavel().trim()
+        );
+
+        compartimento.adicionarQuantidade(
+                ingrediente.getTipo(),
+                request.getQuantidade()
+        );
+
+        Ingrediente ingredienteSalvo = ingredienteRepository.save(ingrediente);
+
+        historicoMovimentacaoService.registrarEntrada(
+                request.getQuantidade(),
+                ingrediente.getTipo(),
+                ingrediente.getNome(),
+                request.getResponsavel().trim(),
+                compartimento,
+                ingredienteSalvo
+        );
+
+        return IngredienteResponse.fromEntity(ingredienteSalvo);
+    }
+
+    @Transactional
+    public IngredienteResponse registrarSaida(Long ingredienteId, MovimentarIngredienteRequest request) {
+        Ingrediente ingrediente = buscarIngredienteEntidadePorId(ingredienteId);
+        Compartimento compartimento = ingrediente.getCompartimento();
+
+        validarQuantidadePositiva(request.getQuantidade());
+        validarQuantidadeDisponivelParaSaida(ingrediente, request.getQuantidade());
+
+        ingrediente.retirarQuantidade(
+                request.getQuantidade(),
+                request.getResponsavel().trim()
+        );
+
+        compartimento.retirarQuantidade(request.getQuantidade());
+
+        Ingrediente ingredienteSalvo = ingredienteRepository.save(ingrediente);
+
+        historicoMovimentacaoService.registrarSaida(
+                request.getQuantidade(),
+                ingrediente.getTipo(),
+                ingrediente.getNome(),
+                request.getResponsavel().trim(),
+                compartimento,
+                ingredienteSalvo
+        );
+
+        return IngredienteResponse.fromEntity(ingredienteSalvo);
+    }
+    
+    private Ingrediente buscarIngredienteEntidadePorId(Long id) {
+        return ingredienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ingrediente não encontrado com o ID: " + id
+                ));
+    }
+
+    private void validarQuantidadeDisponivelParaSaida(
+            Ingrediente ingrediente,
+            BigDecimal quantidade
+    ) {
+        if (ingrediente.getQuantidade().compareTo(quantidade) < 0) {
+            throw new BusinessException(
+                    "Não é possível retirar "
+                            + quantidade
+                            + " "
+                            + ingrediente.getTipo().getUnidadeMedida()
+                            + " do ingrediente "
+                            + ingrediente.getNome()
+                            + ". Quantidade disponível: "
+                            + ingrediente.getQuantidade()
+                            + " "
+                            + ingrediente.getTipo().getUnidadeMedida()
+                            + "."
+            );
+        }
     }
 
     private void validarEntradaNoCompartimento(
