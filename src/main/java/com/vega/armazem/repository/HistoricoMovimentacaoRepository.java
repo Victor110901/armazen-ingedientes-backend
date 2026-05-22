@@ -1,8 +1,11 @@
 package com.vega.armazem.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.vega.armazem.entity.HistoricoMovimentacao;
 
-public interface HistoricoMovimentacaoRepository extends JpaRepository<HistoricoMovimentacao, Long> {
+public interface HistoricoMovimentacaoRepository
+        extends JpaRepository<HistoricoMovimentacao, Long>,
+                JpaSpecificationExecutor<HistoricoMovimentacao> {
 }
